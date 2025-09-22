@@ -92,12 +92,12 @@ def CS(C, ET, LT, a_i, n, k, Pop_Size=50, MaxT=100, pa=0.25):
     fitness = np.array([fitness_function_Z(nest, C, ET, LT, a_i) for nest in population], dtype=float)
     best_solution = population[0]
     best_fitness = np.inf
-    
+    fitness_history = []
+
     for i in range(MaxT):
         new_population = []
         for nest in population:
             new_nest = nest.copy()
-            # Perform a simple swap operation as Levy flight is not directly applicable
             if np.random.random() < 0.5:
                 vehicle1, vehicle2 = np.random.choice(K, 2, replace=False)
                 if len(new_nest[vehicle1]) > 0 and len(new_nest[vehicle2]) > 0:
@@ -108,31 +108,31 @@ def CS(C, ET, LT, a_i, n, k, Pop_Size=50, MaxT=100, pa=0.25):
                     new_nest[vehicle1].append(cust2)
                     new_nest[vehicle2].append(cust1)
             new_population.append(new_nest)
-        
+
         new_fitness = np.array([fitness_function_Z(nest, C, ET, LT, a_i) for nest in new_population], dtype=float)
-        
         replace_soln = np.where(new_fitness < fitness)[0]
         for idx in replace_soln:
             population[idx] = new_population[idx]
             fitness[idx] = new_fitness[idx]
-        
+
         sorted_indices = np.argsort(fitness)
         population = [population[i] for i in sorted_indices]
         fitness = fitness[sorted_indices]
-        
+
         if fitness[0] < best_fitness:
             best_solution = population[0]
             best_fitness = fitness[0]
-            
+
         abandon_egg = int(pa * Pop_Size)
         for _ in range(abandon_egg):
             idx = np.random.randint(Pop_Size)
             population[idx] = initial_Population(1, n, K)[0]
             fitness[idx] = fitness_function_Z(population[idx], C, ET, LT, a_i)
-        
-        print(f"Iteration {i+1}/{MaxT}: Best_Fitness = {best_fitness}")
 
-    return best_solution, best_fitness
+        fitness_history.append(best_fitness)
+
+    return best_solution, best_fitness, fitness_history
+
 
 if __name__ == "__main__":
     # Loop through all CSV files in the current folder
